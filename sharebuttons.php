@@ -42,16 +42,21 @@ function wsbuttons_init()
 function wsbuttons_add_headers()
 {
     global $post;
-    $meta_tags = "<!-- Added by Wordpress Share Buttons " . SHAREBUTTONS_VERSION . " -->\n";
+    
+    $options = get_option('mapkyca-wordpress-social-buttons');
+
+	// Add some common values
+	$meta_tags = "<meta property=\"og:site_name\" content=\"".wp_specialchars(get_option('blogname'))."\" />\r\n";
 
     // Do we need to add meta
-    if (($post) && ( (is_single()) || (is_page()) ))
+    if ((is_single()) || (is_page()) )
     {
 		foreach (array(
-			'og:image',
 			'og:title',
-			'og:url',
 			'og:type',
+			'og:url',
+			'og:image',
+			'og:locale',
 		) as $ogtag)
 		{
 			$content = get_post_meta($post->ID, $ogtag, true);
@@ -65,7 +70,11 @@ function wsbuttons_add_headers()
 
 			case 'og:type' :
 				if (!$content)
-				$content = 'article';
+					$content = 'article';
+			break;
+			case 'og:locale' :
+				if (!$content)
+					$content = 'en_US';
 			break;
 
 			case 'og:url' : 
@@ -79,14 +88,13 @@ function wsbuttons_add_headers()
 			}
 
 			if ($content)
-				$meta_tags .= "<meta property=\"$ogtag\" contents=\"$content\" />\n";
+				$meta_tags .= "<meta property=\"$ogtag\" content=\"$content\" />\r\n";
 		}
+		
+		// Special facebook stuff
+		if ($options['fbappid']) echo "<meta property=\"fb:app_id\" content=\"{$options['fbappid']}\" />\r\n";
+		if ($options['fbadminsid']) echo "<meta property=\"fb:admins\" content=\"{$options['fbadminsid']}\" />\r\n";
     }
-
-	// Add some common values
-	
-	$meta_tags .= "<meta property=\"og:site_name\" content=\"".wp_specialchars(get_option('blogname'))."\" />\n";
-	$meta_tags .= "<!-- -->\n";
 	
     echo $meta_tags;
 }
@@ -96,6 +104,8 @@ function wsbuttons_add_headers()
  */
 function wsbuttons_footer()
 {
+	$options = get_option('mapkyca-wordpress-social-buttons');
+
 ?>
 	<!-- Google +1 button code -->
 	<script type="text/javascript">
@@ -114,7 +124,7 @@ function wsbuttons_footer()
 			  var js, fjs = d.getElementsByTagName(s)[0];
 			  if (d.getElementById(id)) {return;}
 			  js = d.createElement(s); js.id = id;
-			  js.src = "//connect.facebook.net/en_GB/all.js#xfbml=1";
+			  js.src = "//connect.facebook.net/en_GB/all.js#xfbml=1<?php if ($options['fbappid']) echo "&appId={$options['fbappid']}";?>";
 			  fjs.parentNode.insertBefore(js, fjs);
 	}(document, 'script', 'facebook-jssdk'));</script>
 
@@ -150,8 +160,77 @@ function wsbuttons_add_buttons($content)
 		return $content . ob_get_clean();
 }
 
+/**
+ * Add appropriate namespace.
+ */
+function wsbuttons_namespace($content)
+{
+	$content .= " xmlns:og=\"http://opengraphprotocol.org/schema/\" xmlns:fb=\"http://www.facebook.com/2008/fbml\" ";
+	
+	return $content;
+}
+
+/**
+ * Add admin menu
+ */
+function wsbuttons_plugin_menu()
+{
+	add_options_page('Social Buttons Plugin Options', 'Wordpress Social Buttons', 'manage_options', 'mapkyca-wordpress-social-buttons', 'wsbuttons_admin_options');
+}
+
+function wsbuttons_admin_options()
+{
+	if (!current_user_can('manage_options'))  {
+		wp_die( __('You do not have sufficient permissions to access this page.') );
+	}
+	
+	if ($_POST['saveform'] == 'Y' ) {
+
+		$new_options = array(
+			'fbappid' => $_POST['fbappid'],
+			'fbadminsid' => $_POST['fbadminsid'],
+		);
+        
+        // Save the posted value in the database
+		update_option('mapkyca-wordpress-social-buttons', $new_options);
+		
+        
+        // Put an settings updated message on the screen
+        ?>
+<div class="updated"><p><strong><?php _e('settings saved.'); ?></strong></p></div>
+<?php
+	}
+		
+	$options = get_option('mapkyca-wordpress-social-buttons');
+?>
+	<div class="wrap">
+		<form method="POST">
+			<input type="hidden" name="saveform" value="Y" />
+			<h1>Wordpress Social Buttons</h1>
+			
+			<div class="options">
+					<p>
+						<label>Facebook Application ID: <input name="fbappid" type="text" value="<?php echo $options['fbappid']; ?>" /></label>
+					</p>
+					
+					<p>
+						<label>Facebook Admin IDs (comma separated): <input name="fbadminsid" type="text" value="<?php echo $options['fbadminsid']; ?>" /></label>
+					</p>
+					
+					<p class="submit">
+						<input type="submit" name="Submit" class="button-primary" value="Save Changes" />
+					</p>
+			</div>
+		</form>
+	</div>
+<?php
+}
+
 // Listen for init and header requests
 add_action('init', 'wsbuttons_init');
-add_action('wp_head', 'wsbuttons_add_headers');
+add_action('wp_head', 'wsbuttons_add_headers', 20);
 add_action('wp_footer', 'wsbuttons_footer');
 add_filter('the_content', 'wsbuttons_add_buttons');
+add_filter('language_attributes', 'wsbuttons_namespace');
+
+add_action('admin_menu', 'wsbuttons_plugin_menu');
