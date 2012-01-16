@@ -57,6 +57,7 @@ function wsbuttons_add_headers()
 			'og:url',
 			'og:image',
 			'og:locale',
+			'og:description',
 		) as $ogtag)
 		{
 			$content = get_post_meta($post->ID, $ogtag, true);
@@ -65,7 +66,7 @@ function wsbuttons_add_headers()
 			{
 			case 'og:title' :
 				if (!$content)
-				$content = wp_specialchars($post->post_title);
+					$content = wp_specialchars($post->post_title);
 			break;
 
 			case 'og:type' :
@@ -75,6 +76,18 @@ function wsbuttons_add_headers()
 			case 'og:locale' :
 				if (!$content)
 					$content = 'en_US';
+			break;
+			case 'og:description' :
+				
+				if (!$content) 
+				{
+					if (class_exists('All_in_One_SEO_Pack')) {
+						// Play nice with the All in one SEO pack plugin
+						$seo = new All_in_One_SEO_Pack();
+						$content = $seo->get_post_description($post);
+					}
+				}
+					
 			break;
 
 			case 'og:url' : 
