@@ -56,6 +56,7 @@ function wsbuttons_add_headers()
 			'og:type',
 			'og:url',
 			'og:image',
+			'og:audio',
 			'og:locale',
 			'og:description',
 		) as $ogtag)
@@ -94,6 +95,7 @@ function wsbuttons_add_headers()
 				$content = get_permalink($post->ID);
 			break;
 
+			case 'og:audio':
 			case 'og:image':	
 				// Otherwise return og:image custom header
 				$content = get_post_meta($post->ID, $ogtag, true);
