@@ -57,6 +57,9 @@ function wsbuttons_add_headers()
 			'og:url',
 			'og:image',
 			'og:audio',
+			'og:audio:title',
+			'og:audio:artist',
+			'og:audio:album',
 			'og:locale',
 			'og:description',
 		) as $ogtag)
@@ -96,6 +99,9 @@ function wsbuttons_add_headers()
 			break;
 
 			case 'og:audio':
+			case 'og:audio:title':
+			case 'og:audio:artist':
+			case 'og:audio:album':
 			case 'og:image':	
 				// Otherwise return og:image custom header
 				$content = get_post_meta($post->ID, $ogtag, true);
@@ -167,6 +173,13 @@ function wsbuttons_add_buttons($content)
 			<a href="https://twitter.com/share?url=<?php echo urlencode(get_permalink()); ?>&count=vertical" class="twitter-share-button" data-lang="en">Tweet</a>
 			<script>!function(d,s,id){var js,fjs=d.getElementsByTagName(s)[0];if(!d.getElementById(id)){js=d.createElement(s);js.id=id;js.src="//platform.twitter.com/widgets.js";fjs.parentNode.insertBefore(js,fjs);}}(document,"script","twitter-wjs");</script>
 		</div>
+	</div>
+
+	<div class="shareblob reddit">
+		<script type="text/javascript">
+		  reddit_url = "<?php echo get_permalink() ?>";
+		</script>
+		<script type="text/javascript" src="http://www.reddit.com/static/button/button3.js"></script>
 	</div>
 
 </div>
