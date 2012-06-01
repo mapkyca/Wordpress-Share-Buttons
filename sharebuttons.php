@@ -3,7 +3,7 @@
 Plugin Name: Wordpress Share Buttons
 Plugin URI: https://github.com/mapkyca/Wordpress-Share-Buttons
 Description: Provides share buttons and open graph headers.
-Version: 0.1
+Version: 1.0
 Author: Marcus Povey
 Author URI: http://www.marcus-povey.co.uk
 License: GPLv2 or later
@@ -157,6 +157,11 @@ function wsbuttons_footer()
  */
 function wsbuttons_add_buttons($content)
 {
+	$options = get_option('mapkyca-wordpress-social-buttons');
+	
+	if ((is_page()) && ($options['showonpage'] == 'no'))
+		return $content;
+
 	ob_start();
 	?>
 <div class="wsbuttons">
@@ -217,6 +222,7 @@ function wsbuttons_admin_options()
 		$new_options = array(
 			'fbappid' => $_POST['fbappid'],
 			'fbadminsid' => $_POST['fbadminsid'],
+			'showonpage' => $_POST['showonpage']
 		);
         
         // Save the posted value in the database
@@ -243,6 +249,18 @@ function wsbuttons_admin_options()
 					
 					<p>
 						<label>Facebook Admin IDs (comma separated): <input name="fbadminsid" type="text" value="<?php echo $options['fbadminsid']; ?>" /></label>
+					</p>
+
+					<p>
+						<label>Show on pages: 
+							<select name="showonpage">
+								<option></option>
+								<option value="yes" <?php if ($options['showonpage'] == 'yes') 
+									echo "selected=\"y\""; ?>>Yes</option>
+								<option value="no" <?php if ($options['showonpage'] == 'no') 
+									echo "selected=\"y\""; ?>>No</option>
+							</select>
+						</label>
 					</p>
 					
 					<p class="submit">
